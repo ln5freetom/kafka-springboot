@@ -1,0 +1,210 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven-3.9'
+        jdk 'jdk-17'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+    }
+
+    environment {
+        IMAGE_NAME = 'your-username/ecommerce-backend'
+        DOCKER_CREDENTIALS = 'docker-hub-credentials'
+        GITHUB_CREDENTIALS = 'github-credentials'
+        SONAR_PROJECT_KEY = 'e-commerce-backend'
+        SONAR_HOST_URL = 'https://your-sonar-url'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                // Update commit status to GitHub
+                script {
+                    if (env.BRANCH_NAME != null) {
+                        githubNotify status: 'PENDING', context: 'Jenkins CI/Build'
+                    }
+                }
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                sh 'mvn compile -q'
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null) {
+                            githubNotify status: 'FAILURE', context: 'Jenkins CI/Compile'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, '**/target/surefire-reports/*.xml'
+                }
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null) {
+                            githubNotify status: 'FAILURE', context: 'Jenkins CI/Tests'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Static Code Analysis') {
+            steps {
+                sh 'mvn checkstyle:check'
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null) {
+                            githubNotify status: 'FAILURE', context: 'Jenkins CI/Static Analysis'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.host.url=${SONAR_HOST_URL}"
+                }
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null || env.CHANGE_ID != null) {
+                            githubNotify status: 'FAILURE', context: 'SonarQube/Analysis'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate Check') {
+            timeout {
+                absolute(timeoutMinutes: 10)
+            }
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null || env.CHANGE_ID != null) {
+                            githubNotify status: 'FAILURE', context: 'SonarQube/Quality Gate'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn clean package -DskipTests'
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null) {
+                            githubNotify status: 'FAILURE', context: 'Jenkins CI/Package'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            when {
+                anyOf {
+                    branch 'main'
+                    changeRequest()
+                }
+            }
+            steps {
+                script {
+                    def buildTag = env.BUILD_NUMBER
+                    if (env.CHANGE_ID) {
+                        buildTag = "PR-${env.CHANGE_ID}-${buildTag}"
+                    }
+                    docker.build("${IMAGE_NAME}:${buildTag}")
+                }
+            }
+            post {
+                failure {
+                    script {
+                        if (env.BRANCH_NAME != null || env.CHANGE_ID != null) {
+                            githubNotify status: 'FAILURE', context: 'Jenkins CI/Docker Build'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS) {
+                        docker.image("${IMAGE_NAME}:${BUILD_NUMBER}").push()
+                        docker.image("${IMAGE_NAME}:latest").push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo "Deploying latest image to production..."
+                // Uncomment and modify for your deployment
+                // sh '''
+                //     ssh user@your-server "cd /opt/deploy && docker-compose pull && docker-compose up -d"
+                // '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully!"
+            script {
+                if (env.BRANCH_NAME != null) {
+                    githubNotify status: 'SUCCESS', context: 'Jenkins CI/Pipeline'
+                }
+            }
+        }
+        failure {
+            echo "❌ Pipeline failed!"
+            script {
+                if (env.BRANCH_NAME != null) {
+                    githubNotify status: 'FAILURE', context: 'Jenkins CI/Pipeline'
+                }
+            }
+        }
+        cleanup {
+            // Clean up local images to save space
+            sh "docker image prune -f"
+        }
+    }
+}
