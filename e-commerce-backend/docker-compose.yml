@@ -13,7 +13,8 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: yes
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./src/main/resources/test-data.sql:/docker-entrypoint-initdb.d/2-test-data.sql
     networks:
       - ecommerce-net
     healthcheck:
