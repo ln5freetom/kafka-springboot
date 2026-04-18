@@ -1,0 +1,31 @@
+<h2>Orders</h2>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+    <th>ID</th>
+    <th>Order Number</th>
+    <th>Status</th>
+    <th>Total Amount</th>
+    <th>Customer</th>
+    <th>Created</th>
+  </tr>
+  </thead>
+  <tbody>
+    @for (order of orders; track order.id) {
+      <tr>
+        <td>{{ order.id }}</td>
+        <td>{{ order.orderNumber }}</td>
+        <td><span class="badge {{ getStatusBadgeClass(order.status)">{{ order.status }}</span></td>
+        <td>${{ order.totalAmount.toFixed(2) }}</td>
+        <td>{{ order.user.firstName }} {{ order.user.lastName }}</td>
+        <td>{{ order.createdAt | date }}</td>
+      </tr>
+    }
+    @empty {
+      <tr>
+        <td colspan="6">No orders found.</td>
+      </tr>
+    }
+  </tbody>
+</table>

@@ -1,0 +1,26 @@
+<h2>My Wishlist (User {{ userId }})</h2>
+
+@if (products.length > 0) {
+  <div class="mb-3">
+    <button class="btn btn-danger" (click)="clear()">Clear Wishlist</button>
+  </div>
+
+  <div class="row">
+    @for (product of products; track product.id) {
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ product.name }}</h5>
+            <p class="card-text">{{ product.description }}</p>
+            <p class="card-text"><strong>Price: ${{ product.price.toFixed(2) }}</strong></p>
+            <button class="btn btn-danger" (click)="remove(product.id)">Remove from Wishlist</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="alert alert-info">
+    Your wishlist is empty.
+  </div>
+}
