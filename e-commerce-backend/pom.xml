@@ -52,6 +52,18 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Spring Data Redis for Caching -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Spring Cache -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
+
         <!-- Spring Mail -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

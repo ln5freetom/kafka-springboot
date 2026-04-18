@@ -53,6 +53,21 @@ services:
     networks:
       - ecommerce-net
 
+  # Redis for caching product data
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 5
+
   # E-Commerce Spring Boot App
   ecommerce-app:
     build:
@@ -68,16 +83,21 @@ services:
         condition: service_started
       kafka:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     networks:
       - ecommerce-net
 
 volumes:
   mysql-data:
+  redis-data:
 
 networks:
   ecommerce-net:
