@@ -1,0 +1,40 @@
+.card {
+  height: 100%;
+  background: white;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.card-text {
+  color: #666;
+  margin-bottom: 0.5rem;
+  flex-grow: 1;
+}
+
+.card-text strong {
+  color: #667eea;
+  font-size: 1.25rem;
+}
+
+.card p:last-of-type {
+  color: #28a745;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+.input-group {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}

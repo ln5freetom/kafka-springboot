@@ -16,7 +16,7 @@
       <tr>
         <td>{{ order.id }}</td>
         <td>{{ order.orderNumber }}</td>
-        <td><span class="badge {{ getStatusBadgeClass(order.status)">{{ order.status }}</span></td>
+        <td><span class="badge {{ getStatusBadgeClass(order.status) }}">{{ order.status }}</span></td>
         <td>${{ order.totalAmount.toFixed(2) }}</td>
         <td>{{ order.user.firstName }} {{ order.user.lastName }}</td>
         <td>{{ order.createdAt | date }}</td>
