@@ -25,6 +25,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,8 @@ import java.time.format.DateTimeFormatter;
 @Configuration
 @EnableScheduling
 public class BatchConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(BatchConfig.class);
 
     @Value("${app.export.directory:./exports}")
     private String exportDir;
@@ -108,7 +112,16 @@ public class BatchConfig {
                                 "admin@example.com",
                                 orderCount
                         );
-                        kafkaTemplate.send(emailTopic, notification);
+                        
+                        // Add error handling for Kafka send operation
+                        kafkaTemplate.send(emailTopic, notification)
+                                .whenComplete((result, ex) -> {
+                                    if (ex == null) {
+                                        logger.info("Successfully sent Kafka notification about order export completion to topic {}", emailTopic);
+                                    } else {
+                                        logger.error("Failed to send Kafka notification about order export completion: {}", ex.getMessage(), ex);
+                                    }
+                                });
                     }
                 })
                 .build();

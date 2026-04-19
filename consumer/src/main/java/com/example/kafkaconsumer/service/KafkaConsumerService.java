@@ -6,15 +6,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class KafkaConsumerService {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
 
-    private final List<Message> receivedMessages = new ArrayList<>();
+    private final List<Message> receivedMessages = new CopyOnWriteArrayList<>();
 
     @KafkaListener(topics = "${app.kafka.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(Message message) {
@@ -24,7 +24,7 @@ public class KafkaConsumerService {
     }
 
     public List<Message> getReceivedMessages() {
-        return new ArrayList<>(receivedMessages);
+        return List.copyOf(receivedMessages);
     }
 
     public void clearMessages() {

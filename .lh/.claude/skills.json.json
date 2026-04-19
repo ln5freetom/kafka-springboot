@@ -1,0 +1,18 @@
+{
+    "sourceFile": ".claude/skills.json",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1776559258109,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1776559258108,
+            "name": "Commit-0",
+            "content": "{\n  \"skills\": [\n    \"code-review\",\n    \"simplify\",\n    \"claude-md-management\",\n    \"skill-creator\",\n    \"java-master\"\n  ]\n}\n"
+        }
+    ]
+}
